@@ -1,0 +1,139 @@
+/* ===== DEĞİŞKENLER ===== */
+:root {
+  --sr-yellow: #ffe800;
+  --sr-black: #1a1a1a;
+  --sr-gray: #6c757d;
+  --sr-border: #dcdcdc;
+  --sr-error: #d92d20;
+}
+
+body {
+  background-color: #f5f5f5;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* ===== ÜST BAR ===== */
+.topbar {
+  background-color: var(--sr-black);
+}
+
+.logo {
+  color: var(--sr-yellow);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.logo-dot {
+  color: #fff;
+}
+
+.topbar-text {
+  color: #cfcfcf;
+  font-size: 0.85rem;
+}
+
+/* ===== GİRİŞ KARTI ===== */
+.login-wrapper {
+  min-height: calc(100vh - 56px);
+  padding: 2rem 1rem;
+}
+
+.login-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--sr-black);
+  margin-bottom: 0.25rem;
+}
+
+.login-subtitle {
+  font-size: 0.9rem;
+  color: var(--sr-gray);
+  margin-bottom: 1.5rem;
+}
+
+/* ===== FORM ELEMANLARI ===== */
+.form-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--sr-black);
+}
+
+.form-control {
+  border: 1px solid var(--sr-border);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+}
+
+.form-control:focus {
+  border-color: var(--sr-yellow);
+  box-shadow: 0 0 0 0.2rem rgba(255, 232, 0, 0.35);
+}
+
+/* JS bu class'ı ekleyip çıkaracak (hatalı alan) */
+.form-control.is-invalid {
+  border-color: var(--sr-error);
+}
+
+.invalid-feedback {
+  font-size: 0.8rem;
+  color: var(--sr-error);
+  display: none; /* JS "d-block" ekleyince görünür olacak */
+}
+
+.forgot-link {
+  color: var(--sr-gray);
+  text-decoration: none;
+}
+
+.forgot-link:hover {
+  color: var(--sr-black);
+  text-decoration: underline;
+}
+
+/* ===== BUTON ===== */
+.btn-login {
+  background-color: var(--sr-yellow);
+  color: var(--sr-black);
+  font-weight: 700;
+  border: none;
+  border-radius: 6px;
+  padding: 0.65rem;
+  transition: background-color 0.15s ease;
+}
+
+.btn-login:hover {
+  background-color: #e6d100;
+  color: var(--sr-black);
+}
+
+.btn-login:disabled {
+  background-color: #f0e9a8;
+  cursor: not-allowed;
+}
+
+.signup-text {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--sr-gray);
+  margin-top: 1.25rem;
+  margin-bottom: 0;
+}
+
+.signup-text a {
+  color: var(--sr-black);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.signup-text a:hover {
+  text-decoration: underline;
+}
