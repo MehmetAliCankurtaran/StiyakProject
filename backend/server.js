@@ -15,15 +15,28 @@ const User = require("./models/User");
 // express() çağrısı bize bir "app" nesnesi verir — sunucumuzun
 // kendisi bu, tüm ayarları ve rotaları (endpoint'leri) buna ekleyeceğiz.
 const app = express();
-const PORT = 3000;
+// Render, kendi PORT numarasını otomatik olarak process.env.PORT
+// içine koyar. Kendi bilgisayarında bu değişken olmadığı için
+// " || 3000 " ile "yoksa 3000 kullan" diyoruz — böylece hem
+// Render'da hem kendi bilgisayarında sorunsuz çalışır.
+const PORT = process.env.PORT || 3000;
 
 // ================================
 // 3) MONGODB BAĞLANTI ADRESİ
 // ================================
-// DİKKAT: Kullanıcı adı ve şifreyi KENDİ Atlas bilgilerinle
-// harfiyen aynı olacak şekilde yazdığından emin ol.
+// process.env.MONGO_URI: Render'da (ya da kendi bilgisayarında bir
+// .env dosyasında) tanımladığımız "ortam değişkenini" okuyoruz.
+// Neden: Şifreyi artık KOD İÇİNE yazmıyoruz — kod GitHub'a public
+// olarak yüklendiğinde şifre de herkese açık olurdu, bu ÇOK KÖTÜ
+// bir güvenlik açığı olurdu. Bunun yerine şifreyi Render'ın kendi
+// panelinde, koddan AYRI bir yerde saklıyoruz.
+//
+// " || " işareti: "eğer sol taraf yoksa (undefined), sağ tarafı kullan"
+// demek. Bu sayede KENDİ bilgisayarında (Render'da değilken) da
+// çalışmaya devam eder — process.env.MONGO_URI boşsa, buradaki
+// sabit adresi "yedek" olarak kullanır.
 
-const MONGO_URI = "mongodb+srv://opticons001_db_user:pKAIR2KoluShMEHk@clustermehmet.8lkf9hj.mongodb.net/sahibindenDB?appName=clusterMehmet";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://opticons001_db_user:pKAIR2KoluShMEHk@clustermehmet.8lkf9hj.mongodb.net/sahibindenDB?appName=clusterMehmet";
 
 // ================================
 // 4) MONGODB'YE BAĞLAN
