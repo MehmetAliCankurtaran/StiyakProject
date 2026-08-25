@@ -90,7 +90,7 @@ registerForm.addEventListener("submit", async function (event) {
 
   // 3) Backend'e istek at
   try {
-    const response = await fetch("http://localhost:3000/register", {
+    const response = await fetch("https://stiyakproject.onrender.com/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: emailValue, password: passwordValue }),

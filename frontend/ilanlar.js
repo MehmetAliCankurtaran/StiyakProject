@@ -55,7 +55,7 @@ async function ilanlariYukle() {
   const container = document.getElementById("listingsContainer");
 
   try {
-    const response = await fetch("http://localhost:3000/listings");
+    const response = await fetch("https://stiyakproject.onrender.com/listings");
     const ilanlar = await response.json();
 
     if (ilanlar.length === 0) {
@@ -138,7 +138,7 @@ ilanGonderBtn.addEventListener("click", async () => {
 
   // 3) Backend'e gönder
   try {
-    const response = await fetch("http://localhost:3000/listings", {
+    const response = await fetch("https://stiyakproject.onrender.com/listings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
