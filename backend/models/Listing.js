@@ -34,6 +34,12 @@ const listingSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  // resimler: birden fazla resim linkini bir DİZİ (array) olarak
+  // tutuyoruz — "[String]" demek "String'lerden oluşan bir liste" demek.
+  resimler: {
+    type: [String],
+    default: [],
+  },
   createdAt: {
     type: Date,
     default: Date.now,
