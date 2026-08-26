@@ -33,10 +33,20 @@ const kategoriEmoji = {
 function ilanKartiOlustur(ilan) {
   const emoji = kategoriEmoji[ilan.kategori] || "📦";
   const tarih = new Date(ilan.createdAt).toLocaleDateString("tr-TR");
+
+  // Eğer ilanın en az bir resmi varsa, İLK resmi kart görselinde göster.
+  // Yoksa (kullanıcı resim eklemediyse), eskisi gibi emoji göster.
+  const gorsel = (ilan.resimler && ilan.resimler.length > 0)
+    ? `<img src="${ilan.resimler[0]}" class="listing-img" alt="${ilan.baslik}">`
+    : `<div class="listing-img">${emoji}</div>`;
+
+  // data-id: bu karta tıklandığında HANGİ ilanın detayının açılacağını
+  // bilmemiz lazım. İlanın MongoDB'deki benzersiz kimliğini (_id)
+  // HTML elementinin üzerine "etiket" olarak yapıştırıyoruz.
   return `
     <div class="col-6 col-md-4 col-lg-3">
-      <div class="listing-card">
-        <div class="listing-img">${emoji}</div>
+      <div class="listing-card" data-id="${ilan._id}">
+        ${gorsel}
         <div class="listing-body">
           <div class="listing-title">${ilan.baslik}</div>
           <div class="listing-price">${Number(ilan.fiyat).toLocaleString("tr-TR")} TL</div>
@@ -51,22 +61,24 @@ function ilanKartiOlustur(ilan) {
 // ================================
 // İLANLARI BACKEND'DEN ÇEKME
 // ================================
-// aramaTerimi parametresi opsiyonel — hiç yazılmazsa "" (boş) olur,
-// yani "tüm ilanları getir" demek.
+// mevcutIlanlar: en son çekilen ilan listesini HAFIZADA tutuyoruz.
+// Neden: bir karta tıklandığında, o ilanın TÜM bilgisine (resimler,
+// açıklama gibi kart üzerinde göstermediğimiz alanlara) tekrar
+// backend'e istek atmadan, buradan anında ulaşabilelim diye.
+let mevcutIlanlar = [];
+
 async function ilanlariYukle(aramaTerimi = "") {
   const container = document.getElementById("listingsContainer");
 
   try {
-    // encodeURIComponent: kullanıcının yazdığı metni URL'e güvenli
-    // hale getirir (boşluk, Türkçe karakter gibi şeyleri "kodlar").
-    // Neden gerekli: "3+1 daire" gibi bir arama, kodlanmadan adrese
-    // eklenirse "+"  işareti URL'de farklı bir anlama gelir, bozulur.
     const url = aramaTerimi
       ? `https://stiyakproject.onrender.com/listings?ara=${encodeURIComponent(aramaTerimi)}`
       : "https://stiyakproject.onrender.com/listings";
 
     const response = await fetch(url);
     const ilanlar = await response.json();
+
+    mevcutIlanlar = ilanlar; // hafızaya al
 
     if (ilanlar.length === 0) {
       container.innerHTML = `
@@ -89,6 +101,75 @@ async function ilanlariYukle(aramaTerimi = "") {
 }
 
 ilanlariYukle();
+
+// ================================
+// İLAN DETAYINI AÇ (Instagram tarzı modal)
+// ================================
+// Ne: Bir ilan kartına tıklandığında, o ilana ait tüm resimleri
+//     galeri olarak, bilgileri de yanda gösteren modalı dolduruyoruz.
+// Neden event delegation (container'a tek listener): Kartlar JS ile
+//     SONRADAN oluşturuluyor. Her karta ayrı ayrı addEventListener
+//     eklemek yerine, hep var olan SABİT container'a TEK bir listener
+//     ekleyip, tıklamanın hangi karttan geldiğini "closest" ile
+//     buluyoruz — yeni ilan eklense bile listener'ı tekrar kurmamıza
+//     gerek kalmıyor.
+
+document.getElementById("listingsContainer").addEventListener("click", (event) => {
+  // event.target: tam olarak neye tıklandığı (resmin kendisi olabilir,
+  // başlık yazısı olabilir). .closest(".listing-card") ile, tıklanan
+  // yerin İÇİNDE bulunduğu en yakın ".listing-card" elementini buluyoruz.
+  const kart = event.target.closest(".listing-card");
+  if (!kart) return; // kart dışı bir yere tıklandıysa hiçbir şey yapma
+
+  const id = kart.dataset.id; // data-id="..." attribute'unu okur
+  const ilan = mevcutIlanlar.find((i) => i._id === id);
+  if (!ilan) return;
+
+  detayModaliDoldurVeAc(ilan);
+});
+
+function detayModaliDoldurVeAc(ilan) {
+  const emoji = kategoriEmoji[ilan.kategori] || "📦";
+  const tarih = new Date(ilan.createdAt).toLocaleDateString("tr-TR");
+
+  // Metin alanlarını doldur
+  document.getElementById("detayBaslik").textContent = ilan.baslik;
+  document.getElementById("detayFiyat").textContent =
+    `${Number(ilan.fiyat).toLocaleString("tr-TR")} TL`;
+  document.getElementById("detayKonum").textContent = ilan.konum;
+  document.getElementById("detayKategori").textContent = ilan.kategori;
+  document.getElementById("detayTarih").textContent = tarih;
+  document.getElementById("detayAciklama").textContent =
+    ilan.aciklama && ilan.aciklama.trim() ? ilan.aciklama : "Açıklama girilmemiş.";
+  document.getElementById("detayKullanici").textContent = ilan.kullanici;
+
+  // Carousel'i (resim galerisini) doldur.
+  const carouselInner = document.getElementById("detayCarouselInner");
+
+  if (ilan.resimler && ilan.resimler.length > 0) {
+    // .map() ile her resim için bir "carousel-item" HTML'i üretiyoruz.
+    // İlk eleman "active" class'ını almalı — Bootstrap Carousel'in
+    // kuralı bu, hangi resmin İLK gösterileceğini bu class belirler.
+    carouselInner.innerHTML = ilan.resimler
+      .map((resimUrl, index) => `
+        <div class="carousel-item ${index === 0 ? "active" : ""}">
+          <img src="${resimUrl}" alt="${ilan.baslik}">
+        </div>
+      `)
+      .join("");
+  } else {
+    // Hiç resim yoksa, kocaman bir emoji göster (kart görünümüyle tutarlı)
+    carouselInner.innerHTML = `
+      <div class="carousel-item active">
+        <div class="carousel-item-emoji">${emoji}</div>
+      </div>
+    `;
+  }
+
+  // Modalı aç.
+  const modal = new bootstrap.Modal(document.getElementById("detayModal"));
+  modal.show();
+}
 
 // ================================
 // ARAMA KUTUSU
