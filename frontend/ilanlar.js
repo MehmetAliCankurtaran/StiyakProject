@@ -51,17 +51,27 @@ function ilanKartiOlustur(ilan) {
 // ================================
 // İLANLARI BACKEND'DEN ÇEKME
 // ================================
-async function ilanlariYukle() {
+// aramaTerimi parametresi opsiyonel — hiç yazılmazsa "" (boş) olur,
+// yani "tüm ilanları getir" demek.
+async function ilanlariYukle(aramaTerimi = "") {
   const container = document.getElementById("listingsContainer");
 
   try {
-    const response = await fetch("https://stiyakproject.onrender.com/listings");
+    // encodeURIComponent: kullanıcının yazdığı metni URL'e güvenli
+    // hale getirir (boşluk, Türkçe karakter gibi şeyleri "kodlar").
+    // Neden gerekli: "3+1 daire" gibi bir arama, kodlanmadan adrese
+    // eklenirse "+"  işareti URL'de farklı bir anlama gelir, bozulur.
+    const url = aramaTerimi
+      ? `https://stiyakproject.onrender.com/listings?ara=${encodeURIComponent(aramaTerimi)}`
+      : "https://stiyakproject.onrender.com/listings";
+
+    const response = await fetch(url);
     const ilanlar = await response.json();
 
     if (ilanlar.length === 0) {
       container.innerHTML = `
         <div class="col-12 text-center text-muted py-5">
-          Henüz ilan yok. İlk ilanı sen ver! 🎉
+          ${aramaTerimi ? "Aramanızla eşleşen ilan bulunamadı." : "Henüz ilan yok. İlk ilanı sen ver! 🎉"}
         </div>`;
       document.querySelector(".listing-count").textContent = "";
       return;
@@ -79,6 +89,29 @@ async function ilanlariYukle() {
 }
 
 ilanlariYukle();
+
+// ================================
+// ARAMA KUTUSU
+// ================================
+// Ne: Kullanıcı arama kutusuna yazdıkça (ya da Enter'a basınca)
+//     ilanlariYukle() fonksiyonunu, yazdığı terimle tekrar çağırıyoruz.
+
+const searchInput = document.getElementById("searchInput");
+
+if (searchInput) {
+  let debounceTimer; // gecikme zamanlayıcısı için
+
+  searchInput.addEventListener("input", () => {
+    // DEBOUNCE: kullanıcı her harf yazdığında ANINDA istek atmak
+    // yerine, yazmayı bir süre (300ms) durdurunca istek atıyoruz.
+    // Neden: "daire" yazarken 5 harf = 5 ayrı istek yerine,
+    // yazmayı bitirince TEK istek atmak sunucuyu gereksiz yormaz.
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      ilanlariYukle(searchInput.value.trim());
+    }, 300);
+  });
+}
 
 // ================================
 // İLAN EKLEME MODAL

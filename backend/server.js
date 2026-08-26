@@ -152,8 +152,28 @@ app.post("/register", async (req, res) => {
 // ================================
 app.get("/listings", async (req, res) => {
   try {
+    // req.query: adresteki "?ara=..." gibi sorgu parametrelerini okur.
+    // Örnek: /listings?ara=daire  →  req.query.ara === "daire"
+    const { ara } = req.query;
+
+    // Varsayılan filtre: boş obje = "hiçbir kısıtlama yok, hepsini getir"
+    let filtre = {};
+
+    // Eğer kullanıcı bir arama terimi gönderdiyse, filtreyi doldur.
+    if (ara) {
+      // $regex: MongoDB'nin "metin içinde ara" özelliği.
+      // $options: "i": büyük/küçük harf FARK ETMESİN (case-insensitive).
+      // $or: BAŞLIK'ta VEYA AÇIKLAMA'da geçsin, ikisinden biri yeterli.
+      filtre = {
+        $or: [
+          { baslik: { $regex: ara, $options: "i" } },
+          { aciklama: { $regex: ara, $options: "i" } },
+        ],
+      };
+    }
+
     // En yeni ilan en üstte çıksın
-    const listings = await Listing.find().sort({ createdAt: -1 });
+    const listings = await Listing.find(filtre).sort({ createdAt: -1 });
     res.status(200).json(listings);
   } catch (error) {
     console.error("Listings getirme hatası:", error);
