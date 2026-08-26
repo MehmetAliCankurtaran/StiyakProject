@@ -140,6 +140,7 @@ ilanGonderBtn.addEventListener("click", async () => {
   const fiyat     = document.getElementById("ilanFiyat");
   const konum     = document.getElementById("ilanKonum");
   const aciklama  = document.getElementById("ilanAciklama");
+  const resimler  = document.getElementById("ilanResimler");
   const modalMsg  = document.getElementById("modalMessage");
 
   // 1) Validasyon
@@ -169,19 +170,36 @@ ilanGonderBtn.addEventListener("click", async () => {
   ilanGonderBtn.disabled = true;
   ilanGonderBtn.textContent = "Yayınlanıyor...";
 
-  // 3) Backend'e gönder
+  // 3) FormData oluştur ve backend'e gönder.
+  // Ne: FormData, JSON'dan farklı olarak DOSYA da taşıyabilen bir
+  //     "veri paketi" türü. Fotoğraf yüklerken JSON kullanamayız
+  //     çünkü JSON sadece metin/sayı taşıyabilir, ikili (binary)
+  //     dosya verisi taşıyamaz.
+  // Neden headers YOK: JSON.stringify kullanırken elle
+  //     "Content-Type": "application/json" yazıyorduk. FormData
+  //     kullanırken bunu YAZMIYORUZ — tarayıcı, dosya sınırlarını
+  //     (boundary) kendisi hesaplayıp doğru header'ı OTOMATİK ekliyor.
+  //     Elle yazarsak bu otomatik hesaplama bozulur, istek başarısız olur.
+
+  const formData = new FormData();
+  formData.append("baslik", baslik.value.trim());
+  formData.append("kategori", kategori.value);
+  formData.append("fiyat", fiyat.value);
+  formData.append("konum", konum.value.trim());
+  formData.append("aciklama", aciklama.value.trim());
+  formData.append("kullanici", userEmail);
+
+  // resimler.files: kullanıcının seçtiği dosyaların listesi (FileList).
+  // for...of ile tek tek geziyoruz, her birini AYNI "resimler" adıyla
+  // ekliyoruz — backend'deki upload.array("resimler", 5) bu ismi bekliyor.
+  for (const dosya of resimler.files) {
+    formData.append("resimler", dosya);
+  }
+
   try {
     const response = await fetch("https://stiyakproject.onrender.com/listings", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        baslik:    baslik.value.trim(),
-        kategori:  kategori.value,
-        fiyat:     Number(fiyat.value),
-        konum:     konum.value.trim(),
-        aciklama:  aciklama.value.trim(),
-        kullanici: userEmail,
-      }),
+      body: formData, // DİKKAT: JSON.stringify YOK, doğrudan formData
     });
 
     const data = await response.json();
