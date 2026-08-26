@@ -22,7 +22,10 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "sahibinden-ilanlar", // Cloudinary'de resimlerin duracağı klasör
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "heic", "heif"],
+    // heic/heif: iPhone'ların kamerayla çektiği fotoğrafların
+    // VARSAYILAN formatı bu — eklemezsek iPhone kullanıcıları
+    // resim yükleyemez, "sunucu hatası" alır.
     transformation: [{ width: 1200, height: 1200, crop: "limit" }],
     // "limit": resim 1200x1200'den büyükse küçült, küçükse dokunma.
     // Neden: kullanıcı 10MB'lık dev bir fotoğraf yüklerse, hem

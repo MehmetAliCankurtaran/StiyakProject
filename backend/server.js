@@ -8,6 +8,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const User = require("./models/User");
+const upload = require("./cloudinaryConfig");
 
 // ================================
 // 2) UYGULAMAYI OLUŞTUR
@@ -184,15 +185,40 @@ app.get("/listings", async (req, res) => {
 // ================================
 // 6.4) İLAN EKLE (POST /listings)
 // ================================
-app.post("/listings", async (req, res) => {
+// ================================
+// 6.4) İLAN EKLE (POST /listings) — RESİM YÜKLEMELİ
+// ================================
+// upload.array("resimler", 5): "resimler" adlı form alanından,
+// EN FAZLA 5 dosya kabul et. Bu middleware, app.post'un fonksiyonundan
+// ÖNCE çalışır — dosyaları Cloudinary'e yükler, sonuçları req.files'a koyar.
+
+app.post("/listings", upload.array("resimler", 5), async (req, res) => {
   try {
+    // DİKKAT: Artık veri JSON değil, "multipart/form-data" olarak
+    // geldiği için, metin alanları HÂLÂ req.body'de duruyor
+    // (multer bunu otomatik ayırıyor), ama dosyalar req.files'ta.
     const { baslik, fiyat, konum, kategori, aciklama, kullanici } = req.body;
 
     if (!baslik || !fiyat || !konum || !kategori || !kullanici) {
       return res.status(400).json({ message: "Zorunlu alanlar eksik." });
     }
 
-    const yeniIlan = new Listing({ baslik, fiyat, konum, kategori, aciklama, kullanici });
+    // req.files: multer'ın Cloudinary'e yüklediği dosyaların listesi.
+    // Her birinin ".path" özelliği, Cloudinary'deki GERÇEK resim linkini
+    // içerir. .map() ile sadece linkleri (yolları) çıkarıp bir diziye
+    // topluyoruz — Listing modelimizdeki "resimler: [String]" alanına
+    // tam olarak bu uyuyor.
+    const resimLinkleri = req.files ? req.files.map((dosya) => dosya.path) : [];
+
+    const yeniIlan = new Listing({
+      baslik,
+      fiyat,
+      konum,
+      kategori,
+      aciklama,
+      kullanici,
+      resimler: resimLinkleri,
+    });
     await yeniIlan.save();
 
     res.status(201).json({ message: "İlan eklendi!", ilan: yeniIlan });
