@@ -9,6 +9,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const User = require("./models/User");
 const upload = require("./cloudinaryConfig");
+const path = require("path"); // Node.js'in kendi dosya yolu modülü
 
 // ================================
 // 2) UYGULAMAYI OLUŞTUR
@@ -54,10 +55,26 @@ app.use(cors());
 app.use(express.json());
 
 // ================================
-// 6) TEST ENDPOINT'İ
+// 6) FRONTEND DOSYALARINI SUN
 // ================================
+// Ne: Bu backend'in, aynı zamanda frontend dosyalarını (HTML, CSS,
+//     JS) da tarayıcıya sunmasını sağlıyoruz.
+// Neden: Şu ana kadar frontend GitHub Pages'te, backend Render'daydı
+//        — iki AYRI adresti. Şimdi ikisini TEK adreste birleştiriyoruz,
+//        https://stiyakproject.onrender.com direkt siteyi gösterecek.
+//
+// path.join(__dirname, "../frontend"): __dirname = bu dosyanın
+// (server.js'in) bulunduğu klasör (backend/). ".." ile bir üst
+// dizine çık, oradan "frontend" klasörüne gir. Yani sonuç:
+// backend'in YANINDAKI frontend klasörünün TAM yolu.
+app.use(express.static(path.join(__dirname, "../frontend")));
+
+// Kullanıcı https://stiyakproject.onrender.com adresine (hiçbir
+// dosya adı belirtmeden) geldiğinde, otomatik olarak index.html'i
+// göstermesini istiyoruz — "eskiden burada 'Merhaba! Backend
+// çalışıyor' yazan test mesajı vardı, artık gerçek sayfa açılıyor.
 app.get("/", (req, res) => {
-  res.send("Merhaba! Backend çalışıyor.");
+  res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
 
 // ================================
